@@ -87,7 +87,8 @@ export DEMO_DATABASE='<DB_NAME>'
 export DEMO_SCHEMA='<SCHEMA_NAME>'
 export OPENAI_APIKEY='<OPENAI_APIKEY>'
 ```
-
+__NOTE__: Database and Schema names should be CAPITALIZED due to a bug in Snowpark ML.
+  
 -Export Snowflake account credentials as environment variables.
 ```bash
 export AIRFLOW_CONN_SNOWFLAKE_DEFAULT='{"conn_type": "snowflake", "login": "<USER_NAME>", "password": "<PASSWORD>", "schema": "${DEMO_SCHEMA}", "extra": {"account": "<ORG_NAME>-<ACCOUNT_NAME>", "warehouse": "<WAREHOUSE_NAME>", "database": "${DEMO_DATABASE}", "region": "<REGION_NAME>", "role": "<USER_ROLE>", "authenticator": "snowflake", "session_parameters": null, "application": "AIRFLOW"}}'
@@ -133,6 +134,7 @@ hook.role = 'sysadmin'
 hook.run(f"""CREATE DATABASE IF NOT EXISTS {demo_database};
               CREATE SCHEMA IF NOT EXISTS {demo_database}.{demo_schema};
               GRANT CREATE COMPUTE POOL ON ACCOUNT TO ROLE {user_role};
+              GRANT USAGE ON COMPUTE POOL sissyg TO ROLE {user_role};
               GRANT CREATE IMAGE REPOSITORY ON SCHEMA {demo_database}.{demo_schema} TO ROLE {user_role}; 
               GRANT CREATE SERVICE ON SCHEMA {demo_database}.{demo_schema} TO ROLE {user_role};
               GRANT USAGE ON DATABASE {demo_database} TO ROLE {user_role};
@@ -145,6 +147,12 @@ hook.run(f"""CREATE DATABASE IF NOT EXISTS {demo_database};
 ```  
 Setup the table and stage to be used as the Snowflake XCOM backend.
 ```python
+from astronomer.providers.snowflake.hooks.snowpark import SnowparkContainersHook
+import os
+hook = SnowparkContainersHook('snowflake_default')
+user_role = hook.conn_params['role']
+demo_database = os.environ['DEMO_DATABASE']
+demo_schema = os.environ['DEMO_SCHEMA']
 xcom_table='XCOM_TABLE'
 xcom_stage='XCOM_STAGE'
 
@@ -157,9 +165,6 @@ hook.run(f"""CREATE OR REPLACE STAGE {demo_database}.{demo_schema}.{xcom_stage} 
                 key varchar NOT NULL,
                 value_type varchar NOT NULL,
                 value varchar NOT NULL); 
-              GRANT USAGE ON DATABASE {demo_database} TO ROLE {user_role};
-              GRANT USAGE ON SCHEMA {demo_database}.{demo_schema} TO ROLE {user_role};
-              GRANT CREATE TABLE ON SCHEMA {demo_database}.{demo_schema} TO ROLE {user_role};
               GRANT SELECT, INSERT, UPDATE ON TABLE {demo_database}.{demo_schema}.{xcom_table} TO ROLE {user_role};
               GRANT READ, WRITE ON STAGE {demo_database}.{demo_schema}.{xcom_stage} TO ROLE {user_role};
         """)

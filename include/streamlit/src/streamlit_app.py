@@ -121,13 +121,10 @@ def aggrid_interactive_table(df: pd.DataFrame, height=400):
         enablePivot=True,
     )
 
-    options.configure_side_bar()
-
     options.configure_selection("single")
     selection = AgGrid(
-        df,
+        data=df,
         height=height,
-        # fit_columns_on_grid_load=True,
         enable_enterprise_modules=True,
         gridOptions=options.build(),
         theme="streamlit",

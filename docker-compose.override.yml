@@ -60,7 +60,6 @@ services:
       OPENAI_APIKEY: ${OPENAI_APIKEY}
       SNOWFLAKE_CONN_PARAMS: ${AIRFLOW_CONN_SNOWFLAKE_DEFAULT}
     # volumes:
-    # - ${PWD}/include/streamlit/snowflake/session:/snowflake/session
     # - ${PWD}/include/streamlit/src:/app
     ports:
     - 8501:8501
