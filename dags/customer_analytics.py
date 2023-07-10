@@ -53,33 +53,6 @@ def customer_analytics():
     
     @task_group()
     def enter():
-        
-        # @task()
-        # def setup_snowpark_containers(service_name:str) -> str:
-
-        #     if not _LOCAL_MODE:
-        #         hook = SnowparkContainersHook(snowflake_conn_id = _SNOWFLAKE_CONN_ID)
-
-        #         # repository_name = hook.create_repository(repository_name='sissyg')
-
-        #         # pool_name = hook.create_pool(pool_name='sissyg', min_nodes=1, max_nodes=1, replace_existing=False)
-
-                # hook.create_service(repository_name=repository_name, 
-                #                     pool_name=pool_name, 
-                #                     spec_file_name=f'include/snowpark_container_spec.yml', 
-                #                     min_inst=1,
-                #                     max_inst=1,
-                #                     replace_existing=True)
-            
-        #     return service_name
-
-        # @task()
-        # def resume_snowpark_containers(service_name:str) -> str:
-        #     if not "_LOCAL_MODE":
-        #         hook = SnowparkContainersHook(snowflake_conn_id = _SNOWFLAKE_CONN_ID)
-        #         hook.resume_service(service_name=service_name)
-        #         sleep(10)
-        #     return service_name
 
         @task()
         def check_service_status(service_name:str) -> dict:
@@ -252,10 +225,6 @@ def customer_analytics():
             
             return {'database': demo_database, 'schema': demo_schema}
             
-        # _service_name = setup_snowpark_containers(service_name)
-
-        # _service_name = resume_snowpark_containers(service_name)
-
         _services = check_service_status(service_name)
 
         _weaviate_backup_bucket = create_weaviate_backup_bucket(services=_services)
@@ -342,7 +311,7 @@ def customer_analytics():
         def load_unstructured_data(services:dict):
             
             @task.snowpark_containers_python(snowflake_conn_id=_SNOWFLAKE_CONN_ID)
-            def load_support_calls_to_stage(restore_data_uri:str, calls_directory_stage:str) -> str:
+            def load_support_calls_to_stage(services:dict, restore_data_uri:str, calls_directory_stage:str) -> str:
                 import zipfile
                 import io
                 import tempfile
@@ -369,7 +338,9 @@ def customer_analytics():
 
                 return calls_directory_stage
 
-            _calls_directory_stage = load_support_calls_to_stage(restore_data_uri=restore_data_uri, calls_directory_stage=calls_directory_stage)
+            _calls_directory_stage = load_support_calls_to_stage(services=services,
+                                                                 restore_data_uri=restore_data_uri, 
+                                                                 calls_directory_stage=calls_directory_stage)
             
             _stg_comment_table = aql.load_file(task_id='load_twitter_comments',
                 input_file = File(f'{restore_data_uri}/twitter_comments.parquet'),
