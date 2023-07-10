@@ -1,0 +1,284 @@
+{
+    "display": {
+      "label": "ALPHA: Snowpark Containers Python Decorator",
+      "description": "Run a python task in a Airflow Runner in Snowpark Container Services. This operator is in development status and is not intended for production use."
+    },
+    "behavior": {
+      "runnable": true,
+      "generatesData": true,
+      "namingStrategy": "uuid",
+      "excludeFromGraph": false,
+      "returnsRawValue": false
+    },
+    "generation": {
+      "type": "decorator",
+      "decorator": {
+        "decoratorName": "snowsparkcontainer_python_task",
+        "imports": [
+          "from include.astro_provider_snowflake.provider.astronomer.providers.snowflake.decorators.snowpark_containers import snowsparkcontainer_python_task"
+        ],
+        "functionCodeConfig": "python_callable",
+        "includeImplicitDeps": true,
+        "includeTaskIdAsDecoratorArg": true
+      }
+    },
+    "configs": [
+      {
+        "key": "snowflake_conn_id",
+        "dataType": "string",
+        "display": {
+          "label": "Snowflake Connection ID",
+          "description": "Connection ID as added in Cloud IDE Connections.",
+          "default": {
+              "string": "snowflake_default"
+          },
+          "example": {
+              "string": "snowflake_default"
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "python_callable",
+        "dataType": "string",
+        "display": {
+          "label": "Python Callable Function",
+          "description": "A python function with no references to outside variables.",
+          "default": {
+            "string": "runner"
+          },
+          "example": {
+              "string": "runner"
+          },
+          "numLines": 20,
+          "highlightLanguage": "python"
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "runner_service_name",
+        "dataType": "string",
+        "display": {
+          "label": "Runner Service Name",
+          "description": "Name of the Runner Service instantiated in Snowpark Container Services.",
+          "default": {
+              "string": "runner"
+          },
+          "example": {
+              "string": "runner"
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "python",
+        "dataType": "string",
+        "display": {
+          "label": "Python version.",
+          "description": "The version of python used to create a virtualenv for this code.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": "3.9"
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "requirements",
+        "dataType": "stringList",
+        "display": {
+          "label": "Python requirements.",
+          "description": "Optional list of python dependencies or a path to a requirements.txt file to be installed for the callable.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": "['pandas','numpy']"
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "temp_data_output",
+        "dataType": "string",
+        "display": {
+          "label": "Temporary data output 'stage' or 'table'",
+          "description": "If set to 'stage' or 'table' Snowpark DataFrame objects returned from the operator will be serialized to the stage specified by 'temp_data_stage' or a table with prefix 'temp_data_table_prefix'.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": "'stage' | 'table'"
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "temp_data_db",
+        "dataType": "string",
+        "display": {
+          "label": "Temporary data output database name",
+          "description": "The database to be used in serializing temporary Snowpark DataFrames. If not set the operator will use the database set at the operator or hook level.  If None, the operator will assume a default database is set in the Snowflake user preferences.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": ""
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "temp_data_schema",
+        "dataType": "string",
+        "display": {
+          "label": "Temporary data output schema name",
+          "description": "The schema to be used in serializing temporary Snowpark DataFrames. If not set the operator will use the schema set at the operator or hook level.  If None, the operator will assume a default schema is set in the Snowflake user preferences.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": ""
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "temp_data_stage",
+        "dataType": "string",
+        "display": {
+          "label": "Temporary data output stage name",
+          "description": "The stage to be used in serializing temporary Snowpark DataFrames. This must be set if temp_data_output == 'stage'.  Output location will be named for the task:\n\n<DATABASE>.<SCHEMA>.<STAGE>/<DAG_ID>/<TASK_ID>/<RUN_ID>\n\nand a uri will be returned to Airflow xcom:\n\nsnowflake://<ACCOUNT>.<REGION>?&stage=<FQ_STAGE>&key=<DAG_ID>/<TASK_ID>/<RUN_ID>/0/return_value.parquet'",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": ""
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "temp_data_table_prefix",
+        "dataType": "string",
+        "display": {
+          "label": "Temporary data output table prefix",
+          "description": "The prefix name to use for serialized Snowpark DataFrames. This must be set if temp_data_output == 'table'. \n\nOutput table will be named for the task:\n<DATABASE>.<SCHEMA>.<PREFIX><DAG_ID>__<TASK_ID>__<TS_NODASH>_INDEX\n\nand the return value set to a SnowparkTable object with the fully-qualified table name.\n\nSnowparkTable(name=<DATABASE>.<SCHEMA>.<PREFIX><DAG_ID>__<TASK_ID>__<TS_NODASH>_INDEX)",
+          "default": {
+              "string": "XCOM_"
+          },
+          "example": {
+              "string": "XCOM_"
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "temp_data_overwrite",
+        "dataType": "boolean",
+        "display": {
+          "label": "Overwrite temporary data?",
+          "description": "Whether to overwrite existing temp data or error.",
+          "default": {
+              "boolean": false
+          },
+          "example": {
+              "string": "false | true"
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "database",
+        "dataType": "string",
+        "display": {
+          "label": "Name of the Snowflake database to use with this function.",
+          "description": "Setting will override parameters in the connector. Or Snowflake user defaults.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": ""
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "schema",
+        "dataType": "string",
+        "display": {
+          "label": "Name of the Snowflake schema to use with this function.",
+          "description": "Setting will override parameters in the connector. Or Snowflake user defaults.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": ""
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "role",
+        "dataType": "string",
+        "display": {
+          "label": "Name of the Snowflake user role to use with this function.",
+          "description": "Setting will override parameters in the connector. Or Snowflake user defaults.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": ""
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      },
+      {
+        "key": "warehouse",
+        "dataType": "string",
+        "display": {
+          "label": "Name of the Snowflake compute warehouse to use with this function.",
+          "description": "Setting will override parameters in the connector. Or Snowflake user defaults.",
+          "default": {
+              "string": ""
+          },
+          "example": {
+              "string": ""
+          }
+        },
+        "validity": {
+          "mandatory": false
+        }
+      }
+    ]
+  }

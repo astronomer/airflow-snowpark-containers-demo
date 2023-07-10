@@ -1,0 +1,127 @@
+version: '3.1'
+services:
+  scheduler:
+    networks:
+      - airflow
+    # volumes:
+    # - ${PWD}/../astro-provider-snowflake/provider/astronomer/providers/snowflake/:/usr/local/lib/python3.10/site-packages/astronomer/providers/snowflake/
+    environment:
+      DEMO_DATABASE: ${DEMO_DATABASE}
+      DEMO_SCHEMA: ${DEMO_SCHEMA}
+      OPENAI_APIKEY: ${OPENAI_APIKEY}
+      AIRFLOW__CORE__XCOM_BACKEND: 'astronomer.providers.snowflake.xcom_backends.snowflake.SnowflakeXComBackend'
+      AIRFLOW__CORE__XCOM_SNOWFLAKE_TABLE: '${DEMO_DATABASE}.${DEMO_SCHEMA}.XCOM_TABLE'
+      AIRFLOW__CORE__XCOM_SNOWFLAKE_STAGE: '${DEMO_DATABASE}.${DEMO_SCHEMA}.XCOM_STAGE'
+      AIRFLOW__CORE__XCOM_SNOWFLAKE_CONN_NAME: 'snowflake_default'
+      AIRFLOW_CONN_SNOWFLAKE_DEFAULT: ${AIRFLOW_CONN_SNOWFLAKE_DEFAULT}
+      AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES: airflow\.* astro\.* include\.astro\.*
+  airflow-task-runner:
+    image: airflow-runner:local
+    build: ./include/airflow_task_runner
+    environment:
+      PYTHONUNBUFFERED: 1
+    # volumes:
+    # - ${PWD}/include/airflow_task_runner/xcom:/xcom
+    # - ${PWD}/include/airflow_task_runner/src:/app
+    networks:
+      - airflow
+    ports:
+    - 8001:8001
+  minio:
+    image: quay.io/minio/minio:latest
+    platform: linux/amd64
+    command:
+    - server 
+    - /data 
+    - --console-address 
+    - ":9001"
+    ports:
+    - 9000:9000
+    - 9001:9001
+    # volumes:
+    # - ${PWD}/include/minio/data:/data
+    networks:
+      - airflow
+  streamlit:
+    image: sissyg-streamlit:local
+    build: ./include/streamlit
+    # command:
+    # - python
+    # - -m
+    # - streamlit
+    # - run 
+    # - streamlit_app.py 
+    # - --server.port=8501 
+    # - --server.address=0.0.0.0
+    # - --server.fileWatcherType=none
+    # - --browser.gatherUsageStats=false
+    environment:
+      WEAVIATE_ENDPOINT_URL: 'http://weaviate:8081'
+      OPENAI_APIKEY: ${OPENAI_APIKEY}
+      SNOWFLAKE_CONN_PARAMS: ${AIRFLOW_CONN_SNOWFLAKE_DEFAULT}
+    # volumes:
+    # - ${PWD}/include/streamlit/snowflake/session:/snowflake/session
+    # - ${PWD}/include/streamlit/src:/app
+    ports:
+    - 8501:8501
+    networks:
+      - airflow
+  weaviate:
+    image: semitechnologies/weaviate:1.17.3
+    platform: linux/amd64
+    command: "--host 0.0.0.0 --port '8081' --scheme http"
+    ports:
+    - 8081:8081
+    # volumes:
+    #   - ${PWD}/include/weaviate/data:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      ENABLE_MODULES: 'text2vec-openai, backup-s3, qna-openai' #ner-transformers,
+      # NER_INFERENCE_API: 'http://ner-transformers:8082'
+      CLUSTER_HOSTNAME: 'node1'
+      BACKUP_S3_BUCKET: 'weaviate-backup'
+      BACKUP_S3_ENDPOINT: 'minio:9000'
+      BACKUP_S3_USE_SSL: 'false'
+      AWS_ACCESS_KEY_ID: 'minioadmin'
+      AWS_SECRET_ACCESS_KEY: 'minioadmin'
+    networks:
+      - airflow
+  # ner-transformers:
+  #   image: semitechnologies/ner-transformers:dbmdz-bert-large-cased-finetuned-conll03-english
+  #   command: 
+  #   - "uvicorn app:app --host 0.0.0.0 --port 8082"
+  #   ports:
+  #   - 8082:8082
+  #   environment:
+  #     ENABLE_CUDA: '0'
+  #   networks:
+  #     - airflow
+  prometheus:
+    image: prometheus:amd64
+    build: ./include/prometheus
+    platform: linux/amd64
+    ports:
+    - 9090:9090
+    links:
+    - "localhost:host.docker.internal"
+    # volumes:
+    # - ${PWD}/include/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - airflow
+  grafana:
+    image: grafana:amd64
+    build: ./include/grafana
+    platform: linux/amd64
+    environment:
+      # GF_SECURITY_ADMIN_USER: admin
+      # GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: true
+    ports:
+      - 3000:3000
+    # volumes:
+    #   - ${PWD}/include/grafana/data:/var/lib/grafana
+    networks:
+      - airflow

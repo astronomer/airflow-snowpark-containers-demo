@@ -1,0 +1,77 @@
+import {{ pickling_library }}
+import sys
+import logging
+for logger_name in ('snowflake.snowpark', 'snowflake.connector'):
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.{{ log_level }})
+
+try:
+    from snowflake.snowpark import DataFrame as Snowpark_DataFrame
+    from snowflake.snowpark import Session as SnowparkSession
+    from snowflake.snowpark import functions as F
+    from snowflake.snowpark import types as T
+except: 
+    raise Exception('Snowpark libraries are not installed in the environment.')
+
+try:
+    from astro.sql.table import Table, TempTable
+except: 
+    Table = TempTable = None
+
+from api.snowpark_helpers import (
+    SnowparkTable,
+    _deserialize_snowpark_args,
+    _serialize_snowpark_results
+)
+
+conn_params = {{ conn_params }}
+temp_data_dict = {{ temp_data_dict }}
+dag_id = '{{ dag_id }}'
+task_id = '{{ task_id }}'
+run_id = '{{ run_id }}'
+ts_nodash = '{{ ts_nodash }}'
+
+snowpark_session = SnowparkSession.builder.configs(conn_params).create()
+
+{% if expect_airflow %}
+ {# Check whether Airflow is available in the environment.
+ # If it is, we'll want to ensure that we integrate any macros that are being provided
+ # by plugins prior to unpickling the task context. #}
+if sys.version_info >= (3,6):
+    try:
+        from airflow.plugins_manager import integrate_macros_plugins
+        integrate_macros_plugins()
+    except ImportError:
+        {# Airflow is not available in this environment, therefore we won't
+         # be able to integrate any plugin macros. #}
+        pass
+{% endif %}
+
+{% if op_args or op_kwargs %}
+with open(sys.argv[1], "rb") as file:
+    arg_dict = {{ pickling_library }}.load(file)
+
+arg_dict = _deserialize_snowpark_args(arg_dict, snowpark_session, conn_params)
+
+{% else %}
+arg_dict = {"args": [], "kwargs": {}}
+{% endif %}
+
+{% if string_args_global | default(true) -%}
+# Read string args
+with open(sys.argv[3], "r") as file:
+    virtualenv_string_args = list(map(lambda x: x.strip(), list(file)))
+{% endif %}
+
+# Script
+{{ python_callable_source }}
+res = {{ python_callable }}(*arg_dict["args"], **arg_dict["kwargs"])
+
+res, _ = _serialize_snowpark_results(res, snowpark_session, temp_data_dict, conn_params, dag_id, task_id, run_id, ts_nodash, 0)
+
+snowpark_session.close()
+
+# Write output
+with open(sys.argv[2], "wb") as file:
+    if res is not None:
+        {{ pickling_library }}.dump(res, file)

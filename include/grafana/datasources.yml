@@ -1,0 +1,19 @@
+datasources:
+- access: proxy
+  basicAuth: false
+  database: ''
+  id: 1
+  isDefault: true
+  jsonData:
+    httpMethod: POST
+    prometheusType: Prometheus
+    prometheusVersion: 2.40.1
+  name: Prometheus
+  orgId: 1
+  readOnly: false
+  type: prometheus
+  typeLogoUrl: public/app/plugins/datasource/prometheus/img/prometheus_logo.svg
+  typeName: Prometheus
+  uid: abbecec5-b789-476b-aab4-2e20da9025d2
+  url: http://localhost:9090
+  user: ''

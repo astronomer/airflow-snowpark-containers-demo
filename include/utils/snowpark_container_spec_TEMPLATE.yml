@@ -1,0 +1,42 @@
+<SERVICE_NAME> :
+  spec: 
+      container:
+      - name: <CONTAINER_NAME>              #Or service name if only one container
+        image: <IMAGE_NAME>:<TAG>
+        command:
+        - <CMD>
+        - <ARG>
+        args:
+        - <ARG>
+        - <ARG>
+        env:
+          <KEY>: <VALUE>
+        readinessProbe:
+          port: <TCP_PORT_NUM>
+          path: <HTTP_PATH>
+        volumeMounts:
+        - name: <VOLUME_NAME>                     #Local example: logs 
+          mountPath: <MOUNT_PATH_IN_CONTAINER>    #   /opt/app/logs
+        - name: <VOLUME_NAME>                     #Stage example: logs2
+          mountPath: <MOUNT_PATH_IN_CONTAINER>    #   /opt/app/logs2
+        resources:
+          requests:
+            memory: <MEMORY_RESERVED_k_M_G_Ki_Mi_Gi>    #Example: M = x * 10^6 and Mi = x * 1024^2
+            nvidia.com/gpu: <COUNT>                     #requests:=limit
+          limits:
+            memory: <MEMORY_RESERVED_k_M_G_Ki_Mi_Gi>    #Example: M = x * 10^6 and Mi = x * 1024^2
+            nvidia.com/gpu: <COUNT>                     #limit:=requests
+      endpoint:
+      - name: <SERVICE_NAME>
+        port: <INT>
+        public: true | false
+      - name: <SERVICE_NAME>
+        port: <INT>
+        public: true | false
+      volume:
+      - name: <NAME>                     #Local example: logs
+        source: local | @<STAGE_NAME>    #   local
+      - name: <NAME>                    #Stage example: logs2
+        source: local | @<STAGE_NAME>   #   @log_stage
+      networkPolicyConfig:
+        allowInternetEgress: true | false
