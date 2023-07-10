@@ -5,7 +5,7 @@
 
 Overview
 ========
-This demonstration shows an Airflow integration for Snowflake's Snowpark Containers.  Sissy-G Toys is an online retailer for toys and games.  The GroundTruth customer analytics application provides marketing, sales and product managers with a one-stop-shop for analytics.  
+This demonstration shows an Airflow integration for Snowflake's Snowpark Containers.  Sissy-G Toys is an online retailer for toys and games.  The GroundTruth customer analytics application provides marketing, sales and product managers with a one-stop-shop for analytics.  The application uses machine learning models for audio transcription, natural language embeddings and sentiment analysis on structured, semi-structured and unstructured data. 
   
 <img style="display: block; float: right; max-width: 80%; height: auto; margin: auto; float: none!important;" src="images/dag_logos.png">  
   
@@ -75,7 +75,7 @@ curl -sSL install.astronomer.io | sudo bash -s
 
 2. Clone this repository.  
 ```bash
-git clone https://github.com/mpgreg/airflow-snowpark-containers-demo
+git clone https://github.com/astronomer/airflow-snowpark-containers-demo
 cd airflow-snowpark-containers-demo
 ```
   
