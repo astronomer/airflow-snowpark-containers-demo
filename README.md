@@ -111,15 +111,16 @@ ENABLED=true;
 ```
   
 6. Setup Snowflake objects for the demo.  
-    
-Note, this must be run as a user with admin priveleges.  
   
+Create a Python virtual environment to run the setup steps.
 ```bash
-astro dev bash -s
-```
-```bash
+pip install virtualenv
+python -m virtualenv snowpark_containers_venv
+source snowpark_containers_venv/bin/activate 
+pip install './include/astro_provider_snowflake-0.0.0-py3-none-any.whl[docker]'
 python
 ```
+Create databases, schemas and grant permissions.  Note, this must be run as a user with admin priveleges.  The user credentials specified in `AIRFLOW_CONN_SNOWFLAKE_DEFAULT` must be able to assume the sysadmin role.  Alternatively provide the SQL commands below to a system administrator who can run them.
 ```python
 from astronomer.providers.snowflake.hooks.snowpark import SnowparkContainersHook
 import os
@@ -163,7 +164,6 @@ hook.run(f"""CREATE OR REPLACE STAGE {demo_database}.{demo_schema}.{xcom_stage} 
               GRANT READ, WRITE ON STAGE {demo_database}.{demo_schema}.{xcom_stage} TO ROLE {user_role};
         """)
 quit()
-exit
 ```
 
 7. Run the Airflow Customer Analytics DAG in the Airflow UI 
@@ -201,15 +201,6 @@ Alternatively, if the containers were built on an x86 system they only need to b
 ```bash
 docker tag airflow-runner:local airflow-runner:amd64
 docker tag sissyg-streamlit:local sissyg-streamlit:amd64
-```
-  
-11. Create a Python virtual environment to setup Snowpark Containers Services.
-```bash
-pip install virtualenv
-python -m virtualenv snowpark_containers_venv
-source snowpark_containers_venv/bin/activate 
-pip install './include/astro_provider_snowflake-0.0.0-py3-none-any.whl[docker]'
-python
 ```
   
 11. Use the SnowparkContainersHook to setup the Snowpark Containers compute pool and image reposity, and push the container images to the repository.

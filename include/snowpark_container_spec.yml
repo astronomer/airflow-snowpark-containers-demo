@@ -17,7 +17,7 @@ sissyg:
       image: sissyg-streamlit:amd64
       env:
         WEAVIATE_ENDPOINT_URL: 'http://localhost:8081'
-        OPENAI_APIKEY: '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' 
+        OPENAI_APIKEY: 'sk-xxxxxxxxxxxxxxxxxxxxxxx'
       readinessProbe:
         port: 8501
         path: /_stcore/health
